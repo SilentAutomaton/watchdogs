@@ -1,0 +1,12 @@
+[Unit]
+Description=Clipboard daemon watchdog
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/watchdog-clipboard
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

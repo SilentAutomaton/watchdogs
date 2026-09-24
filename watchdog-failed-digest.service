@@ -1,0 +1,7 @@
+[Unit]
+Description=Daily failed units digest
+
+[Service]
+Type=oneshot
+User=silent
+ExecStart=/usr/local/bin/watchdog-failed-digest

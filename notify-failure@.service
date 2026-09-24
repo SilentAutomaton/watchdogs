@@ -1,0 +1,8 @@
+[Unit]
+Description=Failure notification for %i
+After=network.target
+
+[Service]
+Type=oneshot
+User=silent
+ExecStart=/usr/local/bin/notify-failure %i

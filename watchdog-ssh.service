@@ -1,0 +1,14 @@
+[Unit]
+Description=SSH login watchdog
+After=systemd-journald.service
+
+[Service]
+Type=simple
+User=silent
+ExecStart=/usr/local/bin/watchdog-ssh
+Restart=always
+RestartSec=5
+StateDirectory=watchdog-ssh
+
+[Install]
+WantedBy=multi-user.target

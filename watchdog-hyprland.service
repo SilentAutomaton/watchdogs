@@ -1,0 +1,12 @@
+[Unit]
+Description=Hyprland crash watchdog
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/watchdog-hyprland
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,7 @@
+[Unit]
+Description=Disk usage watchdog
+
+[Service]
+Type=oneshot
+User=silent
+ExecStart=/usr/local/bin/watchdog-disk

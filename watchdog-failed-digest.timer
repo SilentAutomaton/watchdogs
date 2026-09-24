@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily failed units digest timer
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,7 @@
+[Unit]
+Description=BTRFS health watchdog
+
+[Service]
+Type=oneshot
+User=silent
+ExecStart=/usr/local/bin/watchdog-btrfs

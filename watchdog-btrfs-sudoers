@@ -1,0 +1,1 @@
+silent ALL=(root) NOPASSWD: /usr/bin/btrfs device stats *, /usr/bin/btrfs scrub status *, /usr/bin/tune2fs -l *

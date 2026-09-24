@@ -1,0 +1,9 @@
+[Unit]
+Description=Failure notification for user service %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/notify-failure --user %i
+
+[Install]
+WantedBy=default.target

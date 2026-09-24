@@ -1,0 +1,14 @@
+[Unit]
+Description=OOM killer watchdog
+After=systemd-journald.service
+
+[Service]
+Type=simple
+User=silent
+ExecStart=/usr/local/bin/watchdog-oom
+Restart=always
+RestartSec=5
+StateDirectory=watchdog-oom
+
+[Install]
+WantedBy=multi-user.target
