@@ -1,24 +1,37 @@
 #!/usr/bin/env bash
-# Alert when any filesystem exceeds THRESHOLD% usage.
+# Alert when a filesystem crosses THRESHOLD% usage, then again only per STEP% of growth.
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
 THRESHOLD=90
+STEP=2
 WATCH_MOUNTS=("/" "/home")
+STATE_DIR="${STATE_DIRECTORY:-/var/lib/watchdog-disk}"
 
-alerts=$(df -h --output=pcent,target,source "${WATCH_MOUNTS[@]}" | awk -v t="${THRESHOLD}" 'NR>1 {
-    pct=$1; sub(/%/,"",pct)
-    if (pct+0 >= t) print $0
-}')
+alerts=()
+for mnt in "${WATCH_MOUNTS[@]}"; do
+    pct=$(df --output=pcent "${mnt}" | awk 'NR == 2 {print $1 + 0}')
+    state="${STATE_DIR}/${mnt//\//_}"
+    if (( pct < THRESHOLD )); then
+        rm -f "${state}"
+        continue
+    fi
+    last=$(cat "${state}" 2>/dev/null || echo 0)
+    (( pct < last + STEP )) && continue
+    echo "${pct}" > "${state}"
+    alerts+=("${mnt} ${pct}%")
+done
 
-[[ -z "${alerts}" ]] && exit 0
+(( ${#alerts[@]} )) || exit 0
 
-subject=$(echo "${alerts}" | awk '{printf "%s %s; ", $2, $1}' | sed 's/; $//')
+subject=$(printf '%s; ' "${alerts[@]}")
+subject="${subject%; }"
 
 {
     printf 'Time: %s\n\n' "$(date -R)"
-    printf 'Filesystems over %s%%:\n\n' "${THRESHOLD}"
-    printf '%s\n\n' "${alerts}"
+    printf 'Over %s%%, next alert after %s%% more:\n\n' "${THRESHOLD}" "${STEP}"
+    printf '%s\n' "${alerts[@]}"
+    printf '\n'
     df -h "${WATCH_MOUNTS[@]}"
 } | send_mail "[watchdog] disk: ${subject}"
 
