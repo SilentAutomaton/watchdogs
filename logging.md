@@ -144,7 +144,7 @@ systemctl --user status watchdog-clipboard.service
 ```
 
 Проверяет каждые 30 с: `wl-paste --type text` и `wl-paste --type image`.  
-При исчезновении — пытается перезапустить (сохраняет cmdline при старте), затем шлёт письмо со статусом рестарта.  
+При исчезновении — пытается перезапустить (сохраняет cmdline при старте). Удачный перезапуск пишется только в журнал, письмо приходит, если перезапуск не помог.  
 `AUTO_RESTART=true` в `watchdog-clipboard.sh` — отключить можно там же.
 
 ### ClamAV — уведомления при нахождении угроз
@@ -158,13 +158,14 @@ Pacman hook запускает `/usr/local/bin/clamav-pacman-scan.sh` после
 
 | Сервис | Тип | Что делает |
 |--------|-----|------------|
-| `watchdog-failed-digest` | system timer, daily | Имена юнитов в теме; на каждый юнит Result/ExecMainStatus/время + 10 строк журнала |
+| `watchdog-failed-digest` | system timer, daily | Шлёт, только если набор упавших юнитов изменился (`/var/lib/watchdog-failed-digest`). Имена юнитов в теме; на каждый юнит Result/ExecMainStatus/время + 10 строк журнала |
 | `watchdog-oom` | system service, poll 60s | Одно письмо на событие: имя/PID/RSS (anon+file+shmem в GiB), cgroup, кто вызвал OOM; курсор в `/var/lib/watchdog-oom` |
-| `watchdog-disk` | system timer, 08/14/20 | Тема `disk: / 94%; /home 91%`; шлёт если `/` или `/home` >90% |
+| `watchdog-disk` | system timer, 08/14/20 | Тема `disk: / 94%; /home 91%`; шлёт при первом пересечении 90% и дальше при росте на 2 пункта; последний процент в `/var/lib/watchdog-disk` |
 | `watchdog-hyprland` | user service | Крэш = новый `~/.cache/hyprland/hyprlandCrashReport*.txt` или coredump; выход из сессии письма не шлёт. В письме начало отчёта и user-журнал за 60 с |
 | `watchdog-btrfs` | system timer, Sun 09:00 | Только при проблеме: ненулевые device error counters, прерванный scrub, ошибки scrub. `no stats available` (scrub ещё не запускался) — не проблема |
 | `watchdog-ssh` | system service, poll 60s | Письмо на каждый успешный вход (user/IP/метод); alert при ≥10 failed за 60с; курсор в `/var/lib/watchdog-ssh` |
-| `watchdog-ports` | system timer, каждые 5 мин, root | Diff `ss -tulpn` с именем процесса; UDP на эфемерных портах игнорируются; состояние в `/run/watchdog-ports/` |
+
+Открытые порты больше не сторожатся письмами: их показывает виджет «Ports» в правой панели Quickshell (`sudo -n ss -tulpnH`, правило в `dots/system/sudoers.d/listening-ports`).
 
 ### Конфигурируемый автоперезапуск
 
@@ -190,6 +191,7 @@ Pacman hook запускает `/usr/local/bin/clamav-pacman-scan.sh` после
 
 ```
 notify-failure.sh              → /usr/local/bin/notify-failure
+watchdog-lib.sh                → /usr/local/lib/watchdog.sh
 watchdog-clipboard.sh          → /usr/local/bin/watchdog-clipboard
 watchdog-hyprland.sh           → /usr/local/bin/watchdog-hyprland
 watchdog-failed-digest.sh      → /usr/local/bin/watchdog-failed-digest
@@ -208,9 +210,6 @@ watchdog-btrfs.timer           → /etc/systemd/system/watchdog-btrfs.timer
 watchdog-ssh.sh                → /usr/local/bin/watchdog-ssh
 watchdog-ssh.service           → /etc/systemd/system/watchdog-ssh.service
 watchdog-btrfs-sudoers         → /etc/sudoers.d/watchdog-btrfs
-watchdog-ports.sh              → /usr/local/bin/watchdog-ports
-watchdog-ports.service         → /etc/systemd/system/watchdog-ports.service
-watchdog-ports.timer           → /etc/systemd/system/watchdog-ports.timer
 drop-ins/system-ollama.conf    → /etc/systemd/system/ollama.service.d/watchdog-notify.conf
 notify-failure-user@.service   → ~/.config/systemd/user/notify-failure@.service  (передаёт --user)
 watchdog-rate.conf             → /etc/tmpfiles.d/watchdog-rate.conf
@@ -231,7 +230,7 @@ mail
 ### Заметки
 
 - `/var/mail/silent` — mbox файл, `mail:silent 660`. Только пользователь `silent` может писать.  
-  Root писать в него не может: `fs.protected_regular=1` запрещает root открывать с O_CREAT чужой файл в sticky-каталоге `/var/mail`. Поэтому сторожа работают с `User=silent`, а `watchdog-ports` (root) пишет через `runuser -u silent -- tee -a`.
+  Root писать в него не может: `fs.protected_regular=1` запрещает root открывать с O_CREAT чужой файл в sticky-каталоге `/var/mail`. Поэтому сторожа работают с `User=silent`, а `send_mail` из `/usr/local/lib/watchdog.sh` под root пишет через `runuser -u silent -- tee -a` (так пишет хук ClamAV).
 - s-nail (mailx) установлен для чтения mbox.
 - После `mail` + `q` прочитанные письма уходят в `~/mbox`, спул очищается.
 

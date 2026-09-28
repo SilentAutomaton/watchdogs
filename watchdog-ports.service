@@ -1,8 +1,0 @@
-[Unit]
-Description=New listening ports watchdog
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/watchdog-ports
-RuntimeDirectory=watchdog-ports
-RuntimeDirectoryPreserve=yes

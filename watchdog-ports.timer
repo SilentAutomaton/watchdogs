@@ -1,9 +1,0 @@
-[Unit]
-Description=New listening ports watchdog timer
-
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=5min
-
-[Install]
-WantedBy=timers.target
