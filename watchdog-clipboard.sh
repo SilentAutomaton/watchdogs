@@ -2,17 +2,12 @@
 # Watchdog for wl-paste clipboard daemons (not systemd services).
 # Checks every 30s; on death attempts restart then mails.
 set -euo pipefail
+. /usr/local/lib/watchdog.sh
 
 AUTO_RESTART=true  # set false to disable restart attempts
-MAILBOX="/var/mail/silent"
-RATE_DIR="/run/watchdog-rate"
 
 TEXT_ARGS=()
 IMAGE_ARGS=()
-
-notify() {
-    notify-send -u normal -a watchdog "${1}" "${2:-}" 2>/dev/null || true
-}
 
 learn_cmd() {
     local pat="$1" arr_var="$2"
@@ -24,19 +19,12 @@ learn_cmd() {
 mail_event() {
     local which="$1" status="$2"
     {
-        printf 'From MAILER-DAEMON %s\n' "$(date '+%a %b %e %H:%M:%S %Y')"
-        printf 'From: watchdog@localhost\n'
-        printf 'To: silent\n'
-        printf 'Subject: [watchdog] clipboard %s died%s\n' "${which}" "${status:+ (${status})}"
-        printf 'Date: %s\n' "$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
-        printf '\n'
         printf 'Time: %s\n' "$(date -R)"
         printf 'Restart: %s\n' "${status:-disabled}"
         printf '\nRunning wl-paste processes:\n'
         pgrep -a wl-paste 2>/dev/null || printf '  (none)\n'
-        printf '\n'
-    } >> "${MAILBOX}"
-    notify "Clipboard ${which} died" "${status}"
+    } | send_mail "[watchdog] clipboard ${which} died${status:+ (${status})}"
+    notify normal "Clipboard ${which} died" "${status}"
 }
 
 check_one() {
@@ -46,13 +34,7 @@ check_one() {
         return
     fi
 
-    local rate_file="${RATE_DIR}/clipboard-${which}" now last
-    now=$(date +%s)
-    if [[ -f "${rate_file}" ]]; then
-        last=$(< "${rate_file}")
-        (( now - last < 300 )) && return
-    fi
-    echo "${now}" > "${rate_file}"
+    rate_limited "clipboard-${which}" 300 && return
 
     local status="not restarted"
     if [[ "${AUTO_RESTART}" == "true" ]]; then

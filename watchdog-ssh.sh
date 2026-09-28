@@ -2,15 +2,10 @@
 # Polls sshd journal for logins and brute-force attempts every 60s.
 # Works even when sshd is stopped — journal just returns nothing.
 set -euo pipefail
+. /usr/local/lib/watchdog.sh
 
-MAILBOX="/var/mail/silent"
 CURSOR_FILE="${STATE_DIRECTORY:-/var/lib/watchdog-ssh}/cursor"
 FAILED_THRESHOLD=10
-
-notify() {
-    DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/1000/bus}" \
-        notify-send -u "${1}" -a watchdog "${2}" "${3:-}" 2>/dev/null || true
-}
 
 parse_entries() {
     python3 -c "
@@ -47,36 +42,22 @@ mail_login() {
     local when
     when=$(date -d "@${ts}" -R 2>/dev/null || date -R)
     {
-        printf 'From MAILER-DAEMON %s\n' "$(date '+%a %b %e %H:%M:%S %Y')"
-        printf 'From: watchdog@localhost\n'
-        printf 'To: silent\n'
-        printf 'Subject: [ssh] login: %s from %s (%s)\n' "${user}" "${ip}" "${method}"
-        printf 'Date: %s\n' "$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
-        printf '\n'
         printf 'User:   %s\n' "${user}"
         printf 'From:   %s\n' "${ip}"
         printf 'Method: %s\n' "${method}"
         printf 'When:   %s\n' "${when}"
-        printf '\n'
-    } >> "${MAILBOX}"
-    notify "normal" "SSH login: ${user}@${ip}" "${method}"
+    } | send_mail "[ssh] login: ${user} from ${ip} (${method})"
+    notify normal "SSH login: ${user}@${ip}" "${method}"
 }
 
 mail_bruteforce() {
     local count="$1"
     {
-        printf 'From MAILER-DAEMON %s\n' "$(date '+%a %b %e %H:%M:%S %Y')"
-        printf 'From: watchdog@localhost\n'
-        printf 'To: silent\n'
-        printf 'Subject: [ssh] %s failed attempts in 60s\n' "${count}"
-        printf 'Date: %s\n' "$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
-        printf '\n'
         printf 'Time: %s\n\n' "$(date -R)"
         journalctl -u sshd.service -n 30 --no-pager -o short-precise \
             | grep -E 'Failed|Invalid|error' || true
-        printf '\n'
-    } >> "${MAILBOX}"
-    notify "critical" "SSH: ${count} failed attempts" ""
+    } | send_mail "[ssh] ${count} failed attempts in 60s"
+    notify critical "SSH: ${count} failed attempts" ""
 }
 
 # First start: skip old logins, watch only new ones.

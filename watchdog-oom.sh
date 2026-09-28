@@ -1,14 +1,9 @@
 #!/usr/bin/env bash
 # Polls journal for OOM events every 60s instead of streaming (saves ~50MB RAM).
 set -euo pipefail
+. /usr/local/lib/watchdog.sh
 
-MAILBOX="/var/mail/silent"
 CURSOR_FILE="${STATE_DIRECTORY:-/var/lib/watchdog-oom}/cursor"
-
-notify() {
-    DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/1000/bus}" \
-        notify-send -u critical -a watchdog "${1}" "${2:-}" 2>/dev/null || true
-}
 
 human() {
     numfmt --from-unit=1024 --to=iec-i --suffix=B --format='%.1f' "$1" 2>/dev/null || echo "$1 kB"
@@ -47,12 +42,6 @@ for line in sys.stdin:
             || echo "(no dump available)")
 
         {
-            printf 'From MAILER-DAEMON %s\n' "$(date '+%a %b %e %H:%M:%S %Y')"
-            printf 'From: watchdog@localhost\n'
-            printf 'To: silent\n'
-            printf 'Subject: [watchdog] OOM: %s (PID %s) killed, %s RSS\n' "${proc}" "${pid}" "${rss}"
-            printf 'Date: %s\n' "$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
-            printf '\n'
             printf 'Killed:    %s (PID %s, UID %s)\n' "${proc}" "${pid}" "${uid}"
             printf 'When:      %s\n' "${when}"
             printf 'RSS:       %s = anon %s + file %s + shmem %s\n' \
@@ -62,10 +51,9 @@ for line in sys.stdin:
             printf 'Triggered: %s (process that asked for memory)\n' "${invoker:-?}"
             printf '\n%s\n\n' '--- Kernel log ---'
             printf '%s\n' "${dump}"
-            printf '\n'
-        } >> "${MAILBOX}"
+        } | send_mail "[watchdog] OOM: ${proc} (PID ${pid}) killed, ${rss} RSS"
 
-        notify "OOM: ${proc} killed" "${rss} RSS, cgroup ${memcg:-?}"
+        notify critical "OOM: ${proc} killed" "${rss} RSS, cgroup ${memcg:-?}"
     done <<< "${killed_lines}"
 }
 

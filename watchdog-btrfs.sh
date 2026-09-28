@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 # Filesystem health watchdog: BTRFS (device stats + scrub) and ext4 (state + journal errors).
 set -euo pipefail
+. /usr/local/lib/watchdog.sh
 
-MAILBOX="/var/mail/silent"
 MOUNTS=("/" "/home" "/mnt")
 
 errors=""
 scrub_issues=""
 summary=()
-
-notify() {
-    DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/1000/bus}" \
-        notify-send -u critical -a watchdog "${1}" "${2:-}" 2>/dev/null || true
-}
 
 check_btrfs() {
     local mnt="$1"
@@ -79,17 +74,10 @@ subject="filesystem: $(printf '%s; ' "${summary[@]}")"
 subject="${subject%; }"
 
 {
-    printf 'From MAILER-DAEMON %s\n' "$(date '+%a %b %e %H:%M:%S %Y')"
-    printf 'From: watchdog@localhost\n'
-    printf 'To: silent\n'
-    printf 'Subject: [watchdog] %s\n' "${subject}"
-    printf 'Date: %s\n' "$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
-    printf '\n'
     printf 'Time: %s\n\n' "$(date -R)"
     printf '%s\n' "${summary[@]}"
     [[ -n "${errors}" ]]       && printf '\n--- Errors ---\n%s\n' "${errors}"
     [[ -n "${scrub_issues}" ]] && printf '\n--- Scrub status ---\n%s\n' "${scrub_issues}"
-    printf '\n'
-} >> "${MAILBOX}"
+} | send_mail "[watchdog] ${subject}"
 
-notify "${subject}" ""
+notify critical "${subject}" ""

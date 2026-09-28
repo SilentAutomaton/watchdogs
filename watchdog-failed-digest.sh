@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
 # Daily digest of failed systemd units (system + user scope).
 set -euo pipefail
+. /usr/local/lib/watchdog.sh
 
-MAILBOX="/var/mail/silent"
 # Runs from a system unit: point systemctl --user at the user manager.
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
-
-notify() {
-    DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/1000/bus}" \
-        notify-send -u normal -a watchdog "${1}" "${2:-}" 2>/dev/null || true
-}
 
 sys_failed=$(systemctl list-units --state=failed --plain --no-legend --no-pager 2>/dev/null | awk '{print $1}' || true)
 usr_failed=$(systemctl --user list-units --state=failed --plain --no-legend --no-pager 2>/dev/null | awk '{print $1}' || true)
@@ -33,12 +28,6 @@ report() {
 }
 
 {
-    printf 'From MAILER-DAEMON %s\n' "$(date '+%a %b %e %H:%M:%S %Y')"
-    printf 'From: watchdog@localhost\n'
-    printf 'To: silent\n'
-    printf 'Subject: [watchdog] %d failed unit(s): %s\n' "${total}" "${name_list}"
-    printf 'Date: %s\n' "$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
-    printf '\n'
     printf 'Time: %s\n' "$(date -R)"
     printf 'After a fix: systemctl [--user] reset-failed <unit>\n'
 
@@ -51,7 +40,6 @@ report() {
         printf '\n%s\n' '--- User failed units ---'
         report --user <<< "${usr_failed}"
     fi
-    printf '\n'
-} >> "${MAILBOX}"
+} | send_mail "[watchdog] ${total} failed unit(s): ${name_list}"
 
-notify "${total} failed unit(s)" "${name_list:0:80}"
+notify normal "${total} failed unit(s)" "${name_list:0:80}"
