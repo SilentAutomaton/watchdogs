@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
-# Daily digest of failed systemd units (system + user scope).
+# Daily digest of failed systemd units (system + user scope), sent only when the set changes.
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
 # Runs from a system unit: point systemctl --user at the user manager.
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
+STATE_FILE="${STATE_DIRECTORY:-/var/lib/watchdog-failed-digest}/last"
 
 sys_failed=$(systemctl list-units --state=failed --plain --no-legend --no-pager 2>/dev/null | awk '{print $1}' || true)
 usr_failed=$(systemctl --user list-units --state=failed --plain --no-legend --no-pager 2>/dev/null | awk '{print $1}' || true)
 
-[[ -z "${sys_failed}" && -z "${usr_failed}" ]] && exit 0
+if [[ -z "${sys_failed}" && -z "${usr_failed}" ]]; then
+    rm -f "${STATE_FILE}"
+    exit 0
+fi
+
+failed_set=$(printf '%s\n--\n%s\n' "${sys_failed}" "${usr_failed}")
+[[ "$(cat "${STATE_FILE}" 2>/dev/null)" == "${failed_set}" ]] && exit 0
+printf '%s\n' "${failed_set}" > "${STATE_FILE}"
 
 names=$(printf '%s\n%s\n' "${sys_failed}" "${usr_failed}" | grep '\S' | sed 's/\.service$//')
 total=$(wc -l <<< "${names}")
