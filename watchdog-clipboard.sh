@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Watchdog for wl-paste clipboard daemons (not systemd services).
-# Checks every 30s; on death attempts restart then mails.
+# Checks every 30s; on death attempts restart and mails only if that does not help.
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
@@ -50,6 +50,10 @@ check_one() {
         fi
     fi
 
+    if [[ "${status}" == "restarted" ]]; then
+        echo "clipboard ${which} died, restarted"
+        return
+    fi
     mail_event "${which}" "${status}"
 }
 
