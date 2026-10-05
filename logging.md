@@ -164,6 +164,7 @@ Pacman hook запускает `/usr/local/bin/clamav-pacman-scan.sh` после
 | `watchdog-hyprland` | user service | Крэш = новый `~/.cache/hyprland/hyprlandCrashReport*.txt` или coredump; выход из сессии письма не шлёт. В письме начало отчёта и user-журнал за 60 с |
 | `watchdog-btrfs` | system timer, Sun 09:00 | Только при проблеме: ненулевые device error counters, прерванный scrub, ошибки scrub. `no stats available` (scrub ещё не запускался) — не проблема |
 | `watchdog-ssh` | system service, poll 60s | Письмо на каждый успешный вход (user/IP/метод); alert при ≥10 failed за 60с; курсор в `/var/lib/watchdog-ssh` |
+| `awg-restart` | NM dispatcher, root | На каждый `up` сети перезапускает уже поднятые awg-туннели (до 5 попыток, `ping -I <туннель>`). Список туннелей берёт из `iface.out` правила killswitch `000-vpnonly-allow-claude.json` без `lo`. Письмо и notify на восстановление (с числом попыток) и на провал (не чаще раза в 5 минут); лог `/var/log/awg-restart.log` |
 
 Открытые порты больше не сторожатся письмами: их показывает виджет «Ports» в правой панели Quickshell (`sudo -n ss -tulpnH`, правило в `dots/system/sudoers.d/listening-ports`).
 
@@ -208,6 +209,7 @@ watchdog-btrfs.sh              → /usr/local/bin/watchdog-btrfs
 watchdog-btrfs.service         → /etc/systemd/system/watchdog-btrfs.service
 watchdog-btrfs.timer           → /etc/systemd/system/watchdog-btrfs.timer
 watchdog-ssh.sh                → /usr/local/bin/watchdog-ssh
+awg-restart.sh                 → /etc/NetworkManager/dispatcher.d/99-awg-restart
 watchdog-ssh.service           → /etc/systemd/system/watchdog-ssh.service
 watchdog-btrfs-sudoers         → /etc/sudoers.d/watchdog-btrfs
 drop-ins/system-ollama.conf    → /etc/systemd/system/ollama.service.d/watchdog-notify.conf
