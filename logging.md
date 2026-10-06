@@ -163,6 +163,7 @@ Pacman hook запускает `/usr/local/bin/clamav-pacman-scan.sh` после
 | `watchdog-disk` | system timer, 08/14/20 | Тема `disk: / 94%; /home 91%`; шлёт при первом пересечении 90% и дальше при росте на 2 пункта; последний процент в `/var/lib/watchdog-disk` |
 | `watchdog-hyprland` | user service | Крэш = новый `~/.cache/hyprland/hyprlandCrashReport*.txt` или coredump; выход из сессии письма не шлёт. В письме начало отчёта и user-журнал за 60 с |
 | `watchdog-btrfs` | system timer, Sun 09:00 | Только при проблеме: ненулевые device error counters, прерванный scrub, ошибки scrub. `no stats available` (scrub ещё не запускался) — не проблема |
+| `watchdog-btrfs-space` | system timer, daily, root | Unallocated на `/` и `/home` ниже max(5%, 10 GiB) → ступенчатый `balance -dusage=0…50` (только data), стоп при достижении порога. Ничего не удаляет. Письмо: balance помог (normal) или место надо освободить руками (critical, повтор при падении ещё на 5 GiB); последнее значение в `/var/lib/watchdog-btrfs-space` |
 | `watchdog-ssh` | system service, poll 60s | Письмо на каждый успешный вход (user/IP/метод); alert при ≥10 failed за 60с; курсор в `/var/lib/watchdog-ssh` |
 | `awg-restart` | NM dispatcher, root | На каждый `up` сети перезапускает уже поднятые awg-туннели (до 5 попыток, `ping -I <туннель>`). Список туннелей берёт из `iface.out` правила killswitch `000-vpnonly-allow-claude.json` без `lo`. Письмо и notify на восстановление (с числом попыток) и на провал (не чаще раза в 5 минут); лог `/var/log/awg-restart.log` |
 
@@ -212,6 +213,9 @@ watchdog-ssh.sh                → /usr/local/bin/watchdog-ssh
 awg-restart.sh                 → /etc/NetworkManager/dispatcher.d/99-awg-restart
 watchdog-ssh.service           → /etc/systemd/system/watchdog-ssh.service
 watchdog-btrfs-sudoers         → /etc/sudoers.d/watchdog-btrfs
+watchdog-btrfs-space.sh        → /usr/local/bin/watchdog-btrfs-space
+watchdog-btrfs-space.service   → /etc/systemd/system/watchdog-btrfs-space.service
+watchdog-btrfs-space.timer     → /etc/systemd/system/watchdog-btrfs-space.timer
 drop-ins/system-ollama.conf    → /etc/systemd/system/ollama.service.d/watchdog-notify.conf
 notify-failure-user@.service   → ~/.config/systemd/user/notify-failure@.service  (передаёт --user)
 watchdog-rate.conf             → /etc/tmpfiles.d/watchdog-rate.conf

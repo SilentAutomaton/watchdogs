@@ -1,0 +1,9 @@
+[Unit]
+Description=BTRFS unallocated space watchdog
+
+[Service]
+Type=oneshot
+StateDirectory=watchdog-btrfs-space
+Nice=19
+IOSchedulingClass=idle
+ExecStart=/usr/local/bin/watchdog-btrfs-space
