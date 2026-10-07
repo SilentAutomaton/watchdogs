@@ -44,11 +44,6 @@ for tun in "${TUNNELS[@]}"; do
     awg show "${tun}" &> /dev/null || continue
     log "NM event: ${1} ${2}, restarting ${tun}"
     if restart "${tun}"; then
-        {
-            printf 'Time: %s\n' "$(date -R)"
-            printf 'Tunnel %s is back after %s of %s attempts.\n' "${tun}" "${ATTEMPTS}" "${MAX_ATTEMPTS}"
-            printf 'Trigger: %s %s\n' "${1}" "${2}"
-        } | send_mail "[watchdog] awg: ${tun} restored after ${ATTEMPTS} attempt(s)"
         notify normal "AmneziaWG: ${tun} restored" "${ATTEMPTS}/${MAX_ATTEMPTS} attempts"
     else
         failed+=("${tun}")
@@ -58,10 +53,5 @@ done
 (( ${#failed[@]} )) || exit 0
 rate_limited awg-restart 300 && exit 1
 
-{
-    printf 'Time: %s\n' "$(date -R)"
-    printf 'No connectivity after %s attempts: %s\n\n' "${MAX_ATTEMPTS}" "${failed[*]}"
-    tail -n 30 "${LOG}"
-} | send_mail "[watchdog] awg: ${failed[*]} did not come up"
 notify critical "AmneziaWG: ${failed[*]} down" "${MAX_ATTEMPTS} attempts failed"
 exit 1
