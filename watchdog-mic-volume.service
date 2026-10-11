@@ -1,0 +1,12 @@
+[Unit]
+Description=Built-in mic volume lock
+After=pipewire-pulse.service wireplumber.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/watchdog-mic-volume
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -24,6 +24,7 @@
 | `watchdog-ssh` | сервис, опрос раз в 60 с | Письмо на каждый успешный вход по SSH, тревога при 10 неудачных попытках за минуту |
 | `watchdog-clipboard` | пользовательский сервис | Перезапускает упавшие демоны буфера обмена `wl-paste`; пишет, только если перезапуск не помог |
 | `watchdog-hyprland` | пользовательский сервис | Появился отчёт о падении Hyprland или coredump. Обычный выход из сессии падением не считается |
+| `watchdog-mic-volume` | пользовательский сервис | Держит громкость встроенного микрофона веб-камеры на 50% и показывает уведомление при каждом сбросе. WirePlumber сбрасывает её на 100% при подключении и отключении Bluetooth-наушников. Микрофон в разъёме не трогает |
 | `clamav-pacman-scan.sh` | хук pacman | После установки проверяет сторонние пакеты (AUR) через ClamAV |
 | `awg-restart.sh` | диспетчер NetworkManager | Когда сеть поднялась, перезапускает работавшие туннели AmneziaWG, до 5 попыток |
 
@@ -56,7 +57,7 @@
 | `clamav-pacman-scan.sh` | `/usr/local/bin/clamav-pacman-scan.sh` |
 | `awg-restart.sh` | `/etc/NetworkManager/dispatcher.d/99-awg-restart` |
 | системные `*.service`, `*.timer` | `/etc/systemd/system/` |
-| `notify-failure-user@.service`, `watchdog-clipboard.service`, `watchdog-hyprland.service` | `~/.config/systemd/user/` (первый под именем `notify-failure@.service`) |
+| `notify-failure-user@.service`, `watchdog-clipboard.service`, `watchdog-hyprland.service`, `watchdog-mic-volume.service` | `~/.config/systemd/user/` (первый под именем `notify-failure@.service`) |
 | `drop-ins/system-<svc>.conf` | `/etc/systemd/system/<svc>.service.d/watchdog-notify.conf` |
 | `drop-ins/user-<svc>.conf` | `~/.config/systemd/user/<svc>.service.d/watchdog-notify.conf` |
 | `watchdog-btrfs-sudoers` | `/etc/sudoers.d/watchdog-btrfs` |

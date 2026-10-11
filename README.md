@@ -24,6 +24,7 @@ before you copy it.
 | `watchdog-ssh` | service, polls every 60 s | A letter for every successful SSH login, an alert at 10 failed attempts in a minute |
 | `watchdog-clipboard` | user service | Restarts dead `wl-paste` clipboard daemons; mails only if the restart fails |
 | `watchdog-hyprland` | user service | A Hyprland crash report or coredump appeared. A normal logout is not a crash |
+| `watchdog-mic-volume` | user service | Holds the built-in webcam mic volume at 50% and shows a notification on each reset. WirePlumber resets it to 100% when Bluetooth headphones connect or disconnect. A mic in the jack is left alone |
 | `clamav-pacman-scan.sh` | pacman hook | Scans foreign (AUR) packages after install with ClamAV |
 | `awg-restart.sh` | NetworkManager dispatcher | When a network comes up, restarts the AmneziaWG tunnels that were up, up to 5 tries |
 
@@ -55,7 +56,7 @@ There is no installer. Copy each file to its place by hand:
 | `clamav-pacman-scan.sh` | `/usr/local/bin/clamav-pacman-scan.sh` |
 | `awg-restart.sh` | `/etc/NetworkManager/dispatcher.d/99-awg-restart` |
 | system `*.service`, `*.timer` | `/etc/systemd/system/` |
-| `notify-failure-user@.service`, `watchdog-clipboard.service`, `watchdog-hyprland.service` | `~/.config/systemd/user/` (the first one as `notify-failure@.service`) |
+| `notify-failure-user@.service`, `watchdog-clipboard.service`, `watchdog-hyprland.service`, `watchdog-mic-volume.service` | `~/.config/systemd/user/` (the first one as `notify-failure@.service`) |
 | `drop-ins/system-<svc>.conf` | `/etc/systemd/system/<svc>.service.d/watchdog-notify.conf` |
 | `drop-ins/user-<svc>.conf` | `~/.config/systemd/user/<svc>.service.d/watchdog-notify.conf` |
 | `watchdog-btrfs-sudoers` | `/etc/sudoers.d/watchdog-btrfs` |
