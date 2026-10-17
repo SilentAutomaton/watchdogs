@@ -1,0 +1,7 @@
+# /etc/watchdogs/awg-restart.conf — required: set TUNNELS or RULE.
+# AmneziaWG interfaces to restart when an uplink comes up.
+TUNNELS=("wg0")
+# Or read them from an opensnitch rule whose iface.out regex is ^(lo|wg0|wg1)$.
+# RULE="/etc/opensnitchd/rules/vpnonly.json"
+MAX_ATTEMPTS=5
+CHECK_HOST="8.8.8.8"

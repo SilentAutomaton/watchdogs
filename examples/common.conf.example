@@ -1,0 +1,3 @@
+# /etc/watchdogs/common.conf — required by every watchdog.
+# The user who gets the mail in /var/mail/<user> and the desktop notifications.
+WATCHDOG_USER="alice"

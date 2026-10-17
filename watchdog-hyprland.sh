@@ -4,8 +4,9 @@
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
-AUTO_RESTART=false  # set true to relaunch Hyprland after crash (kills all child apps)
+AUTO_RESTART=false  # true: relaunch Hyprland after crash (kills all child apps)
 CRASH_DIR="${HOME}/.cache/hyprland"
+load_config hyprland
 
 mail_crash() {
     local report="$1" coredump="$2" last_seen="$3"

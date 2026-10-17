@@ -3,7 +3,8 @@
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
-MOUNTS=("/" "/home" "/mnt")
+MOUNTS=("/")
+load_config btrfs
 
 errors=""
 scrub_issues=""

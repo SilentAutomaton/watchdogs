@@ -7,9 +7,12 @@ put a letter in the local mailbox (`/var/mail/<user>`, read with `mail`) and sho
 a desktop notification. There is no mail server and nothing leaves the machine.
 
 These are my personal tools. You are free to use them and change them however
-you like, but they are not meant to be universal: the user name, mount points
-and the list of watched services are set inside the scripts. Read a script
-before you copy it.
+you like, but they are not meant to be universal: the list of watched services
+and some checks fit my machine only. Read a script before you copy it.
+
+They are now a little easier to reuse. The user name, mount points and other
+settings live in `/etc/watchdogs/*.conf` instead of the scripts, and
+`install.sh` puts the files in place.
 
 ## What is watched
 
@@ -36,8 +39,17 @@ which `watchdog-rate.conf` creates through tmpfiles.d.
 `notify-failure` stays silent while the system is stopping or in maintenance
 mode, so a shutdown does not flood the mailbox.
 
-`AUTO_RESTART` at the top of `notify-failure.sh`, `watchdog-clipboard.sh` and
-`watchdog-hyprland.sh` turns automatic restarts on or off.
+`AUTO_RESTART` in `/etc/watchdogs/notify-failure.conf`, `clipboard.conf` and
+`hyprland.conf` turns automatic restarts on or off.
+
+## Settings
+
+Each script keeps its defaults at the top. A file `/etc/watchdogs/<name>.conf`
+overrides them; `examples/<name>.conf.example` lists the settings of each
+watchdog. `common.conf` with `WATCHDOG_USER` is required by all of them.
+`mic-volume.conf` (`SOURCE`, `PORT`) and `awg-restart.conf` (`TUNNELS` or
+`RULE`) are required for those two. The files are sourced as shell, often by
+root: keep them owned by root and not writable by others.
 
 ## Why the watchdogs run as the user
 
@@ -47,7 +59,10 @@ few that need root write the letter through `runuser -u <user> -- tee -a`.
 
 ## Install
 
-There is no installer. Copy each file to its place by hand:
+Run `sudo ./install.sh <user>`. It copies the files below, puts the user name
+in place of `@USER@` in the units, sudoers and tmpfiles files, and creates
+`/etc/watchdogs/common.conf` if it is missing. It never overwrites a
+`/etc/watchdogs/*.conf`, does not install the drop-ins and enables nothing.
 
 | File | Destination |
 |---|---|
@@ -57,13 +72,14 @@ There is no installer. Copy each file to its place by hand:
 | `awg-restart.sh` | `/etc/NetworkManager/dispatcher.d/99-awg-restart` |
 | system `*.service`, `*.timer` | `/etc/systemd/system/` |
 | `notify-failure-user@.service`, `watchdog-clipboard.service`, `watchdog-hyprland.service`, `watchdog-mic-volume.service` | `~/.config/systemd/user/` (the first one as `notify-failure@.service`) |
-| `drop-ins/system-<svc>.conf` | `/etc/systemd/system/<svc>.service.d/watchdog-notify.conf` |
-| `drop-ins/user-<svc>.conf` | `~/.config/systemd/user/<svc>.service.d/watchdog-notify.conf` |
+| `drop-ins/system-<svc>.conf` (by hand) | `/etc/systemd/system/<svc>.service.d/watchdog-notify.conf` |
+| `drop-ins/user-<svc>.conf` (by hand) | `~/.config/systemd/user/<svc>.service.d/watchdog-notify.conf` |
 | `watchdog-btrfs-sudoers` | `/etc/sudoers.d/watchdog-btrfs` |
 | `watchdog-rate.conf` | `/etc/tmpfiles.d/watchdog-rate.conf` |
 
-Then replace the user name in the scripts and units with yours, run
-`systemctl daemon-reload` for both scopes and enable the timers and services.
+Then add the settings you need to `/etc/watchdogs/`, copy the drop-ins for the
+services you want to watch, run `systemctl --user daemon-reload` as the user
+and enable the timers and services.
 
 Test the failure path:
 

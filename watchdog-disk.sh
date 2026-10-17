@@ -5,7 +5,8 @@ set -euo pipefail
 
 THRESHOLD=90
 STEP=2
-WATCH_MOUNTS=("/" "/home")
+WATCH_MOUNTS=("/")
+load_config disk
 STATE_DIR="${STATE_DIRECTORY:-/var/lib/watchdog-disk}"
 
 alerts=()

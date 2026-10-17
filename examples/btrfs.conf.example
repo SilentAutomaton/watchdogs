@@ -1,0 +1,2 @@
+# /etc/watchdogs/btrfs.conf — mounts checked for btrfs device errors, scrub errors and ext4 errors.
+MOUNTS=("/" "/home")

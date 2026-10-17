@@ -4,7 +4,8 @@
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
-AUTO_RESTART=true  # set false to disable restart attempts
+AUTO_RESTART=true  # false: do not restart the daemons
+load_config clipboard
 
 TEXT_ARGS=()
 IMAGE_ARGS=()

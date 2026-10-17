@@ -1,0 +1,2 @@
+# /etc/watchdogs/ssh.conf — failed SSH attempts in one poll that trigger a brute-force alert.
+FAILED_THRESHOLD=10

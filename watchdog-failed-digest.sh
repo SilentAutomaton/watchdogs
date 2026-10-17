@@ -4,7 +4,7 @@ set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
 # Runs from a system unit: point systemctl --user at the user manager.
-export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-${USER_RUNTIME_DIR}}"
 STATE_FILE="${STATE_DIRECTORY:-/var/lib/watchdog-failed-digest}/last"
 
 sys_failed=$(systemctl list-units --state=failed --plain --no-legend --no-pager 2>/dev/null | awk '{print $1}' || true)

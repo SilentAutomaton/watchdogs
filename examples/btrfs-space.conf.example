@@ -1,0 +1,10 @@
+# /etc/watchdogs/btrfs-space.conf
+# btrfs mounts to keep balanced.
+MOUNTS=("/" "/home")
+# Keep unallocated space above max(MIN_PCT% of the device, MIN_GIB GiB).
+MIN_PCT=5
+MIN_GIB=10
+# Balance -dusage steps, tried in order.
+STEPS=(0 5 10 20 30 40 50)
+# Mail again only after the free space drops by this many GiB more.
+REMAIL_GIB=5

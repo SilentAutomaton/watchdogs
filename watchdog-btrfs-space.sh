@@ -4,11 +4,12 @@
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
-MOUNTS=("/" "/home")
+MOUNTS=("/")
 MIN_PCT=5
 MIN_GIB=10
 STEPS=(0 5 10 20 30 40 50)
 REMAIL_GIB=5
+load_config btrfs-space
 STATE_DIR="${STATE_DIRECTORY:-/var/lib/watchdog-btrfs-space}"
 
 GIB=$((1024 ** 3))

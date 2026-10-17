@@ -9,7 +9,8 @@ if [[ "${SYSTEM_STATE}" == "stopping" || "${SYSTEM_STATE}" == "maintenance" ]]; 
     exit 0
 fi
 
-AUTO_RESTART=false  # set true to attempt systemctl restart on failure
+AUTO_RESTART=false  # true: try systemctl restart on failure
+load_config notify-failure
 
 scope=()
 if [[ "${1:-}" == "--user" ]]; then

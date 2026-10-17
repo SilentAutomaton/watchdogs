@@ -1,0 +1,5 @@
+# /etc/watchdogs/mic-volume.conf — required.
+# Find the names with: pactl list sources | grep -e Name: -e 'Active Port:'
+SOURCE="alsa_input.pci-0000_00_1f.3.analog-stereo"
+PORT="analog-input-internal-mic"
+VOLUME="50%"

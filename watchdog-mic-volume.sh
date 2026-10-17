@@ -5,9 +5,14 @@
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
-SOURCE="alsa_input.pci-0000_00_1f.3.analog-stereo"
-PORT="analog-input-internal-mic"
+SOURCE=""
+PORT=""
 VOLUME="50%"
+load_config mic-volume
+if [[ -z "${SOURCE}" || -z "${PORT}" ]]; then
+    echo "watchdog-mic-volume: set SOURCE and PORT in ${CONF_DIR}/mic-volume.conf" >&2
+    exit 1
+fi
 
 hold() {
     local state port current

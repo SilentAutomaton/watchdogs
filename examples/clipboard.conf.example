@@ -1,0 +1,2 @@
+# /etc/watchdogs/clipboard.conf — false: only mail when a wl-paste daemon dies, do not restart it.
+AUTO_RESTART=true

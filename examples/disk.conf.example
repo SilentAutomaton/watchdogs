@@ -1,0 +1,5 @@
+# /etc/watchdogs/disk.conf
+# Alert at THRESHOLD% usage, then again for each STEP% of growth.
+THRESHOLD=90
+STEP=2
+WATCH_MOUNTS=("/" "/home")

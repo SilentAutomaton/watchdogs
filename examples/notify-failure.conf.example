@@ -1,0 +1,2 @@
+# /etc/watchdogs/notify-failure.conf — true: try systemctl restart on a unit failure.
+AUTO_RESTART=false

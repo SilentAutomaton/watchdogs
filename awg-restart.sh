@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # NetworkManager dispatcher: when an uplink comes up, restart the AmneziaWG tunnels that are
-# already up. The tunnels are the interfaces the vpnonly killswitch lets through.
+# already up. TUNNELS lists them, or RULE names an opensnitch rule whose iface.out regex does.
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
 
-RULE="/etc/opensnitchd/rules/000-vpnonly-allow-claude.json"
+TUNNELS=()
+RULE=""
 LOG="/var/log/awg-restart.log"
 MAX_ATTEMPTS=5
 CHECK_HOST="8.8.8.8"
+load_config awg-restart
 
 log() { echo "[$(date '+%F %T')] $*" >> "${LOG}"; }
 
@@ -36,7 +38,8 @@ restart() {
 
 [[ "${2:-}" == "up" ]] || exit 0
 
-mapfile -t TUNNELS < <(tunnels)
+[[ -n "${RULE}" ]] && mapfile -t TUNNELS < <(tunnels)
+(( ${#TUNNELS[@]} )) || exit 0
 printf '%s\n' "${TUNNELS[@]}" | grep -qxF -- "${1:-}" && exit 0
 [[ -n "$(ip route show default dev "${1:-}" 2>/dev/null)" ]] || exit 0
 

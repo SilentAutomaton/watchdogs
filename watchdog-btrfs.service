@@ -3,5 +3,5 @@ Description=BTRFS health watchdog
 
 [Service]
 Type=oneshot
-User=silent
+User=@USER@
 ExecStart=/usr/local/bin/watchdog-btrfs

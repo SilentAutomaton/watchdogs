@@ -3,6 +3,6 @@ Description=Daily failed units digest
 
 [Service]
 Type=oneshot
-User=silent
+User=@USER@
 StateDirectory=watchdog-failed-digest
 ExecStart=/usr/local/bin/watchdog-failed-digest

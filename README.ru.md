@@ -8,10 +8,14 @@
 сервера нет, с машины ничего не уходит.
 
 Это мои личные инструменты. Используйте и меняйте их как угодно, но
-универсальными они не задумывались: имя пользователя, точки монтирования и
-список сервисов прописаны прямо в скриптах. Прочитайте скрипт, прежде чем копировать.
+универсальными они не задумывались: список сервисов и часть проверок подходят
+только моей машине. Прочитайте скрипт, прежде чем копировать.
 
-## Что сторожится
+Теперь их немного проще взять себе. Имя пользователя, точки монтирования и
+другие настройки лежат не в скриптах, а в `/etc/watchdogs/*.conf`, а файлы
+по местам раскладывает `install.sh`.
+
+## Что отслеживается
 
 | Часть | Как запускается | Что делает |
 |---|---|---|
@@ -36,8 +40,17 @@
 Пока система выключается или стоит в режиме обслуживания, `notify-failure`
 молчит, чтобы выключение не завалило ящик письмами.
 
-`AUTO_RESTART` в начале `notify-failure.sh`, `watchdog-clipboard.sh` и
-`watchdog-hyprland.sh` включает и выключает автоматический перезапуск.
+`AUTO_RESTART` в `/etc/watchdogs/notify-failure.conf`, `clipboard.conf` и
+`hyprland.conf` включает и выключает автоматический перезапуск.
+
+## Настройки
+
+Значения по умолчанию записаны в начале каждого скрипта. Файл
+`/etc/watchdogs/<имя>.conf` их переопределяет; настройки каждого сторожа
+перечислены в `examples/<имя>.conf.example`. `common.conf` с `WATCHDOG_USER`
+нужен всем. Для `mic-volume` обязателен `mic-volume.conf` (`SOURCE`, `PORT`),
+для `awg-restart` — `awg-restart.conf` (`TUNNELS` или `RULE`). Файлы
+выполняются как shell, часто от root: владелец — root, запись другим запрещена.
 
 ## Почему сторожа работают от пользователя
 
@@ -48,7 +61,10 @@
 
 ## Установка
 
-Установщика нет. Каждый файл копируется на своё место руками:
+Запустите `sudo ./install.sh <user>`. Он копирует файлы из таблицы, подставляет
+имя пользователя вместо `@USER@` в юниты, sudoers и tmpfiles и создаёт
+`/etc/watchdogs/common.conf`, если его нет. Существующие `/etc/watchdogs/*.conf`
+он не трогает, drop-in'ы не ставит и ничего не включает.
 
 | Файл | Куда |
 |---|---|
@@ -58,13 +74,14 @@
 | `awg-restart.sh` | `/etc/NetworkManager/dispatcher.d/99-awg-restart` |
 | системные `*.service`, `*.timer` | `/etc/systemd/system/` |
 | `notify-failure-user@.service`, `watchdog-clipboard.service`, `watchdog-hyprland.service`, `watchdog-mic-volume.service` | `~/.config/systemd/user/` (первый под именем `notify-failure@.service`) |
-| `drop-ins/system-<svc>.conf` | `/etc/systemd/system/<svc>.service.d/watchdog-notify.conf` |
-| `drop-ins/user-<svc>.conf` | `~/.config/systemd/user/<svc>.service.d/watchdog-notify.conf` |
+| `drop-ins/system-<svc>.conf` (руками) | `/etc/systemd/system/<svc>.service.d/watchdog-notify.conf` |
+| `drop-ins/user-<svc>.conf` (руками) | `~/.config/systemd/user/<svc>.service.d/watchdog-notify.conf` |
 | `watchdog-btrfs-sudoers` | `/etc/sudoers.d/watchdog-btrfs` |
 | `watchdog-rate.conf` | `/etc/tmpfiles.d/watchdog-rate.conf` |
 
-Потом замените в скриптах и юнитах имя пользователя на своё, выполните
-`systemctl daemon-reload` для обоих уровней и включите таймеры и сервисы.
+Потом положите нужные настройки в `/etc/watchdogs/`, скопируйте drop-in'ы для
+сервисов, за которыми нужно следить, выполните `systemctl --user daemon-reload`
+от пользователя и включите таймеры и сервисы.
 
 Проверка пути отказа:
 

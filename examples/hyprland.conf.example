@@ -1,0 +1,2 @@
+# /etc/watchdogs/hyprland.conf — true: relaunch Hyprland after a crash (kills all child apps).
+AUTO_RESTART=false

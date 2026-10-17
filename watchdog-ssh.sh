@@ -6,6 +6,7 @@ set -euo pipefail
 
 CURSOR_FILE="${STATE_DIRECTORY:-/var/lib/watchdog-ssh}/cursor"
 FAILED_THRESHOLD=10
+load_config ssh
 
 parse_entries() {
     python3 -c "
