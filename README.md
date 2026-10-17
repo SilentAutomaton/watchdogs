@@ -26,7 +26,7 @@ before you copy it.
 | `watchdog-hyprland` | user service | A Hyprland crash report or coredump appeared. A normal logout is not a crash |
 | `watchdog-mic-volume` | user service | Holds the built-in webcam mic volume at 50% and shows a notification on each reset. WirePlumber resets it to 100% when Bluetooth headphones connect or disconnect. A mic in the jack is left alone |
 | `clamav-pacman-scan.sh` | pacman hook | Scans foreign (AUR) packages after install with ClamAV |
-| `awg-restart.sh` | NetworkManager dispatcher | When a network comes up, restarts the AmneziaWG tunnels that were up, up to 5 tries |
+| `awg-restart.sh` | NetworkManager dispatcher | When an uplink comes up, restarts the AmneziaWG tunnels that stopped passing traffic, up to 5 tries |
 
 Shared code lives in `watchdog-lib.sh`: the mail writer, the desktop
 notification and a rate limit. `notify-failure` and `watchdog-clipboard` send

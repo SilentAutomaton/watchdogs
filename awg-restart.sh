@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# NetworkManager dispatcher: when a network comes up, restart the AmneziaWG tunnels that are
+# NetworkManager dispatcher: when an uplink comes up, restart the AmneziaWG tunnels that are
 # already up. The tunnels are the interfaces the vpnonly killswitch lets through.
 set -euo pipefail
 . /usr/local/lib/watchdog.sh
@@ -38,10 +38,12 @@ restart() {
 
 mapfile -t TUNNELS < <(tunnels)
 printf '%s\n' "${TUNNELS[@]}" | grep -qxF -- "${1:-}" && exit 0
+[[ -n "$(ip route show default dev "${1:-}" 2>/dev/null)" ]] || exit 0
 
 failed=()
 for tun in "${TUNNELS[@]}"; do
     awg show "${tun}" &> /dev/null || continue
+    ping -c2 -W3 -I "${tun}" "${CHECK_HOST}" &> /dev/null && continue
     log "NM event: ${1} ${2}, restarting ${tun}"
     if restart "${tun}"; then
         notify normal "AmneziaWG: ${tun} restored" "${ATTEMPTS}/${MAX_ATTEMPTS} attempts"
