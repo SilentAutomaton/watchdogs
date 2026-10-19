@@ -1,0 +1,3 @@
+# /etc/watchdogs/clock.conf
+# Remind after this many days without an NTP sync.
+MAX_DAYS=7

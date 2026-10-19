@@ -24,6 +24,7 @@ settings live in `/etc/watchdogs/*.conf` instead of the scripts, and
 | `watchdog-disk` | timer, 08:00, 14:00, 20:00 | A filesystem crossed 90%, then again for every 2 more points |
 | `watchdog-btrfs` | weekly timer | BTRFS device error counters and scrub results, ext4 state; mails only on a problem |
 | `watchdog-btrfs-space` | daily timer, root | Unallocated BTRFS space fell below max(5%, 10 GiB): runs a stepwise data balance. Never deletes anything; if balance does not help, mails what fills the disk |
+| `watchdog-clock` | daily timer | The last NTP sync is older than 7 days: a notification to run `sync-time`. Reads only the journal, sends nothing |
 | `watchdog-ssh` | service, runs while sshd runs, polls every 60 s | A letter for every successful SSH login, an alert at 10 failed attempts in a minute |
 | `watchdog-clipboard` | user service | Restarts dead `wl-paste` clipboard daemons; mails only if the restart fails |
 | `watchdog-hyprland` | user service | A Hyprland crash report or coredump appeared. A normal logout is not a crash |
