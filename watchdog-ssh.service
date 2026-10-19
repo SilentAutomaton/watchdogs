@@ -1,6 +1,7 @@
 [Unit]
 Description=SSH login watchdog
-After=systemd-journald.service
+After=systemd-journald.service sshd.service
+BindsTo=sshd.service
 
 [Service]
 Type=simple
@@ -11,4 +12,4 @@ RestartSec=5
 StateDirectory=watchdog-ssh
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sshd.service
