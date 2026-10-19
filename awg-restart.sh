@@ -24,7 +24,10 @@ restart() {
     for (( ATTEMPTS = 1; ATTEMPTS <= MAX_ATTEMPTS; ATTEMPTS++ )); do
         log "${tun}: attempt ${ATTEMPTS}/${MAX_ATTEMPTS}"
         awg-quick down "${tun}" >> "${LOG}" 2>&1 || true
-        awg-quick up "${tun}" >> "${LOG}" 2>&1 || { log "${tun}: up failed"; continue; }
+        # A scope of its own keeps amneziawg-go out of the dispatcher's cgroup,
+        # which systemd cleans up whenever the dispatcher stops.
+        systemd-run --scope --quiet --collect awg-quick up "${tun}" >> "${LOG}" 2>&1 \
+            || { log "${tun}: up failed"; continue; }
         sleep 2
         if ping -c2 -W3 -I "${tun}" "${CHECK_HOST}" &> /dev/null; then
             log "${tun}: connected"
