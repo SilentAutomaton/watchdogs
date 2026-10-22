@@ -30,6 +30,7 @@ settings live in `/etc/watchdogs/*.conf` instead of the scripts, and
 | `watchdog-hyprland` | user service | A Hyprland crash report or coredump appeared. A normal logout is not a crash |
 | `watchdog-mic-volume` | user service | Holds the built-in webcam mic volume at 50% and shows a notification on each reset. WirePlumber resets it to 100% when Bluetooth headphones connect or disconnect. A mic in the jack is left alone |
 | `clamav-pacman-scan.sh` | pacman hook | Scans foreign (AUR) packages after install with ClamAV |
+| `watchdog-awg` | timer every 10 s, root | Pings through each AmneziaWG tunnel that is up. A tunnel that passes no data (a UDP flow frozen by TSPU) is restarted for a new source port; while it stays down, the next restart waits 30 s, doubling up to 5 min. Notifies on every heal; also mails after 3 failed restarts |
 | `awg-restart.sh` | NetworkManager dispatcher | When an uplink comes up, restarts the AmneziaWG tunnels that stopped passing traffic, up to 5 tries |
 
 Shared code lives in `watchdog-lib.sh`: the mail writer, the desktop
@@ -48,8 +49,8 @@ mode, so a shutdown does not flood the mailbox.
 Each script keeps its defaults at the top. A file `/etc/watchdogs/<name>.conf`
 overrides them; `examples/<name>.conf.example` lists the settings of each
 watchdog. `common.conf` with `WATCHDOG_USER` is required by all of them.
-`mic-volume.conf` (`SOURCE`, `PORT`) and `awg-restart.conf` (`TUNNELS` or
-`RULE`) are required for those two. The files are sourced as shell, often by
+`mic-volume.conf` (`SOURCE`, `PORT`) and `awg-restart.conf` and `awg-watchdog.conf`
+(`TUNNELS` or `RULE`) are required for those. The files are sourced as shell, often by
 root: keep them owned by root and not writable by others.
 
 ## Why the watchdogs run as the user

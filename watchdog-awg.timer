@@ -1,0 +1,10 @@
+[Unit]
+Description=AmneziaWG data path watchdog timer
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=10s
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target

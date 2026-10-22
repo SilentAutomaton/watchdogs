@@ -1,0 +1,14 @@
+# /etc/watchdogs/awg-watchdog.conf — required: set TUNNELS or RULE.
+# AmneziaWG interfaces to watch; only the ones that are up are checked.
+TUNNELS=("wg0")
+# Or read them from an opensnitch rule whose iface.out regex is ^(lo|wg0|wg1)$.
+# RULE="/etc/opensnitchd/rules/vpnonly.json"
+# Pinged through each tunnel; the peer's tunnel address avoids false alarms from a far host.
+CHECK_HOST="8.8.8.8"
+# The unit that brings the tunnel up, when it is not awg-quick@<tunnel>.service.
+# AWG_UNIT="awg-mc.service"
+# Seconds before the next restart while a tunnel stays down; doubles up to MAX_BACKOFF.
+BACKOFF=30
+MAX_BACKOFF=300
+# Notify and mail after this many failed restarts in a row.
+ALERT_AFTER=3

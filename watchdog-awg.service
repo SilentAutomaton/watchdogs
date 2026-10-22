@@ -1,0 +1,7 @@
+[Unit]
+Description=AmneziaWG data path watchdog
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/watchdog-awg
