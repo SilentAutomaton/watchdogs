@@ -46,6 +46,38 @@ send_mail() {
     } | as_user tee -a "${MAILBOX}" >/dev/null
 }
 
+# Usage: awg_tunnels RULE [TUNNEL...]. With RULE set, the interfaces come from the iface.out
+# regex ^(lo|wg0|wg1)$ of that opensnitch rule; otherwise they are the arguments.
+awg_tunnels() {
+    local rule="$1"
+    shift
+    if [[ -n "${rule}" ]]; then
+        jq -r '.operator.list[] | select(.operand == "iface.out") | .data' "${rule}" \
+            | sed -E 's/^\^\(//; s/\)\$$//' | tr '|' '\n' | sed '/^lo$/d'
+    elif (( $# )); then
+        printf '%s\n' "$@"
+    fi
+}
+
+# A new interface gets a new random source port: the only heal for a UDP flow frozen by TSPU.
+# "awg set listen-port" on a live amneziawg-go 3.1 interface stops all data instead.
+# Usage: awg_restart_tunnel TUN [UNIT]. UNIT defaults to awg-quick@TUN.service when that is active.
+# Children get fd 9 closed: amneziawg-go would otherwise hold the lock for its whole life.
+awg_restart_tunnel() {
+    local tun="$1" unit="${2:-awg-quick@${1}.service}"
+    (
+        flock 9
+        if systemctl -q is-active "${unit}"; then
+            systemctl restart "${unit}" 9>&-
+        else
+            awg-quick down "${tun}" 9>&- || true
+            # A scope of its own keeps amneziawg-go out of the caller's cgroup,
+            # which systemd cleans up when the caller's unit stops.
+            systemd-run --scope --quiet --collect awg-quick up "${tun}" 9>&-
+        fi
+    ) 9> "/run/awg-restart.${tun}.lock"
+}
+
 # Succeeds while KEY fired less than TTL seconds ago; otherwise stamps KEY and fails.
 rate_limited() {
     local stamp="${RATE_DIR}/${1}" now last

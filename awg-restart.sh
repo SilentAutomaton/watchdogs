@@ -13,21 +13,12 @@ load_config awg-restart
 
 log() { echo "[$(date '+%F %T')] $*" >> "${LOG}"; }
 
-tunnels() {
-    jq -r '.operator.list[] | select(.operand == "iface.out") | .data' "${RULE}" \
-        | sed -E 's/^\^\(//; s/\)\$$//' | tr '|' '\n' | sed '/^lo$/d'
-}
-
 # On success ATTEMPTS holds the number of tries used.
 restart() {
     local tun="$1"
     for (( ATTEMPTS = 1; ATTEMPTS <= MAX_ATTEMPTS; ATTEMPTS++ )); do
         log "${tun}: attempt ${ATTEMPTS}/${MAX_ATTEMPTS}"
-        awg-quick down "${tun}" >> "${LOG}" 2>&1 || true
-        # A scope of its own keeps amneziawg-go out of the dispatcher's cgroup,
-        # which systemd cleans up whenever the dispatcher stops.
-        systemd-run --scope --quiet --collect awg-quick up "${tun}" >> "${LOG}" 2>&1 \
-            || { log "${tun}: up failed"; continue; }
+        awg_restart_tunnel "${tun}" >> "${LOG}" 2>&1 || { log "${tun}: up failed"; continue; }
         sleep 2
         if ping -c2 -W3 -I "${tun}" "${CHECK_HOST}" &> /dev/null; then
             log "${tun}: connected"
@@ -41,7 +32,7 @@ restart() {
 
 [[ "${2:-}" == "up" ]] || exit 0
 
-[[ -n "${RULE}" ]] && mapfile -t TUNNELS < <(tunnels)
+mapfile -t TUNNELS < <(awg_tunnels "${RULE}" "${TUNNELS[@]}")
 (( ${#TUNNELS[@]} )) || exit 0
 printf '%s\n' "${TUNNELS[@]}" | grep -qxF -- "${1:-}" && exit 0
 [[ -n "$(ip route show default dev "${1:-}" 2>/dev/null)" ]] || exit 0
