@@ -49,6 +49,10 @@ heal() {
     (( failures < ALERT_AFTER )) || alert "${tun}" "${failures}"
 }
 
+# Without an uplink a restart cannot help. Right after resume it also races NetworkManager,
+# which then takes the new tunnel as its own and flushes its routes.
+[[ -n "$(ip -4 route show default table main)" ]] || exit 0
+
 install -d -m 700 "${STATE_DIR}"
 mapfile -t tunnels < <(awg_tunnels "${RULE}" "${TUNNELS[@]}")
 for tun in "${tunnels[@]}"; do
