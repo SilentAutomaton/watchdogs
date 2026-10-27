@@ -50,7 +50,9 @@ Each script keeps its defaults at the top. A file `/etc/watchdogs/<name>.conf`
 overrides them; `examples/<name>.conf.example` lists the settings of each
 watchdog. `common.conf` with `WATCHDOG_USER` is required by all of them.
 `mic-volume.conf` (`SOURCE`, `PORT`) and `awg-restart.conf` and `awg-watchdog.conf`
-(`TUNNELS` or `RULE`) are required for those. The files are sourced as shell, often by
+(`TUNNELS` or `RULE`) are required for those. The optional `AWG_RESTART_HOOK` in
+`common.conf` runs as `<hook> pre <tun>` before every AmneziaWG restart and
+`<hook> post <tun>` after it. The files are sourced as shell, often by
 root: keep them owned by root and not writable by others.
 
 ## Why the watchdogs run as the user

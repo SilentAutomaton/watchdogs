@@ -51,7 +51,9 @@
 `/etc/watchdogs/<имя>.conf` их переопределяет; настройки каждого сторожа
 перечислены в `examples/<имя>.conf.example`. `common.conf` с `WATCHDOG_USER`
 нужен всем. Для `mic-volume` обязателен `mic-volume.conf` (`SOURCE`, `PORT`),
-для `awg-restart` и `watchdog-awg` — `awg-restart.conf` и `awg-watchdog.conf` (`TUNNELS` или `RULE`). Файлы
+для `awg-restart` и `watchdog-awg` — `awg-restart.conf` и `awg-watchdog.conf` (`TUNNELS` или `RULE`). Необязательный `AWG_RESTART_HOOK` в `common.conf`
+выполняется как `<хук> pre <туннель>` перед каждым рестартом AmneziaWG и как
+`<хук> post <туннель>` после него. Файлы
 выполняются как shell, часто от root: владелец — root, запись другим запрещена.
 
 ## Почему сторожа работают от пользователя

@@ -1,3 +1,6 @@
 # /etc/watchdogs/common.conf — required by every watchdog.
 # The user who gets the mail in /var/mail/<user> and the desktop notifications.
 WATCHDOG_USER="alice"
+
+# Optional. Runs as "<hook> pre <tun>" before every AmneziaWG restart and "<hook> post <tun>" after.
+# AWG_RESTART_HOOK=(/usr/local/bin/nowg --_awg-hook)

@@ -2,6 +2,7 @@
 
 CONF_DIR="/etc/watchdogs"
 WATCHDOG_USER=""
+AWG_RESTART_HOOK=()
 [[ -r "${CONF_DIR}/common.conf" ]] && . "${CONF_DIR}/common.conf"
 if [[ -z "${WATCHDOG_USER}" ]]; then
     echo "watchdog: set WATCHDOG_USER in ${CONF_DIR}/common.conf" >&2
@@ -63,19 +64,31 @@ awg_tunnels() {
 # "awg set listen-port" on a live amneziawg-go 3.1 interface stops all data instead.
 # Usage: awg_restart_tunnel TUN [UNIT]. UNIT defaults to awg-quick@TUN.service when that is active.
 # Children get fd 9 closed: amneziawg-go would otherwise hold the lock for its whole life.
+# AWG_RESTART_HOOK from common.conf runs as "HOOK pre TUN" before and "HOOK post TUN" after.
 awg_restart_tunnel() {
     local tun="$1" unit="${2:-awg-quick@${1}.service}"
     (
         flock 9
+        awg_restart_hook pre "${tun}"
+        rc=0
         if systemctl -q is-active "${unit}"; then
-            systemctl restart "${unit}" 9>&-
+            systemctl restart "${unit}" 9>&- || rc=$?
         else
             awg-quick down "${tun}" 9>&- || true
             # A scope of its own keeps amneziawg-go out of the caller's cgroup,
             # which systemd cleans up when the caller's unit stops.
-            systemd-run --scope --quiet --collect awg-quick up "${tun}" 9>&-
+            systemd-run --scope --quiet --collect awg-quick up "${tun}" 9>&- || rc=$?
         fi
+        awg_restart_hook post "${tun}"
+        exit "${rc}"
     ) 9> "/run/awg-restart.${tun}.lock"
+}
+
+# awg-quick adds its ip rules with no priority, so the kernel puts them above every other rule.
+# A hook lets a tool whose rules must stay above them step aside for the restart.
+awg_restart_hook() {
+    (( ${#AWG_RESTART_HOOK[@]} )) || return 0
+    "${AWG_RESTART_HOOK[@]}" "$@" 9>&- || echo "awg restart hook failed: ${AWG_RESTART_HOOK[*]} $*" >&2
 }
 
 # Succeeds while KEY fired less than TTL seconds ago; otherwise stamps KEY and fails.
